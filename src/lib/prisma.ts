@@ -1,7 +1,7 @@
 import debug from 'debug';
 import { Prisma } from '@prisma/client';
 import prisma from '@umami/prisma-client';
-import moment from 'moment-timezone';
+import { formatInTimeZone } from 'date-fns-tz';
 import { MYSQL, POSTGRESQL, getDatabaseType } from 'lib/db';
 import { SESSION_COLUMNS, OPERATORS, DEFAULT_PAGE_SIZE } from './constants';
 import { fetchWebsite } from './load';
@@ -14,17 +14,17 @@ const log = debug('umami:prisma');
 const MYSQL_DATE_FORMATS = {
   minute: '%Y-%m-%dT%H:%i:00',
   hour: '%Y-%m-%d %H:00:00',
-  day: '%Y-%m-%d',
-  month: '%Y-%m-01',
-  year: '%Y-01-01',
+  day: '%Y-%m-%d 00:00:00',
+  month: '%Y-%m-01 00:00:00',
+  year: '%Y-01-01 00:00:00',
 };
 
 const POSTGRESQL_DATE_FORMATS = {
   minute: 'YYYY-MM-DD HH24:MI:00',
   hour: 'YYYY-MM-DD HH24:00:00',
-  day: 'YYYY-MM-DD',
-  month: 'YYYY-MM-01',
-  year: 'YYYY-01-01',
+  day: 'YYYY-MM-DD HH24:00:00',
+  month: 'YYYY-MM-01 HH24:00:00',
+  year: 'YYYY-01-01 HH24:00:00',
 };
 
 function getAddIntervalQuery(field: string, interval: string): string {
@@ -75,7 +75,7 @@ function getDateSQL(field: string, unit: string, timezone?: string): string {
 
   if (db === MYSQL) {
     if (timezone) {
-      const tz = moment.tz(timezone).format('Z');
+      const tz = formatInTimeZone(new Date(), timezone, 'xxx');
       return `date_format(convert_tz(${field},'+00:00','${tz}'), '${MYSQL_DATE_FORMATS[unit]}')`;
     }
     return `date_format(${field}, '${MYSQL_DATE_FORMATS[unit]}')`;
@@ -90,7 +90,7 @@ function getDateWeeklySQL(field: string, timezone?: string) {
   }
 
   if (db === MYSQL) {
-    const tz = moment.tz(timezone).format('Z');
+    const tz = formatInTimeZone(new Date(), timezone, 'xxx');
     return `date_format(convert_tz(${field},'+00:00','${tz}'), '%w:%H')`;
   }
 }
@@ -119,11 +119,11 @@ function getTimestampDiffSQL(field1: string, field2: string): string {
   }
 }
 
-function getSearchSQL(column: string): string {
+function getSearchSQL(column: string, param: string = 'search'): string {
   const db = getDatabaseType();
   const like = db === POSTGRESQL ? 'ilike' : 'like';
 
-  return `and ${column} ${like} {{search}}`;
+  return `and ${column} ${like} {{${param}}`;
 }
 
 function mapFilter(column: string, operator: string, name: string, type: string = '') {
