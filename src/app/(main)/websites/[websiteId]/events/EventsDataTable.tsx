@@ -1,6 +1,6 @@
-import { useWebsiteEvents } from 'components/hooks';
+import { useWebsiteEvents } from '@/components/hooks';
 import EventsTable from './EventsTable';
-import DataTable from 'components/common/DataTable';
+import DataTable from '@/components/common/DataTable';
 import { ReactNode } from 'react';
 
 export default function EventsDataTable({
@@ -13,7 +13,7 @@ export default function EventsDataTable({
   const queryResult = useWebsiteEvents(websiteId);
 
   return (
-    <DataTable queryResult={queryResult} allowSearch={true}>
+    <DataTable queryResult={queryResult} allowSearch={true} autoFocus={false}>
       {({ data }) => <EventsTable data={data} />}
     </DataTable>
   );
