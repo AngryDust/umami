@@ -1,9 +1,9 @@
-import { useMemo } from 'react';
 import { colord } from 'colord';
-import BarChart from 'components/charts/BarChart';
-import { useLocale, useDateRange, useWebsiteEventsSeries } from 'components/hooks';
-import { CHART_COLORS } from 'lib/constants';
-import { renderDateLabels } from 'lib/charts';
+import BarChart from '@/components/charts/BarChart';
+import { useDateRange, useLocale, useWebsiteEventsSeries } from '@/components/hooks';
+import { renderDateLabels } from '@/lib/charts';
+import { CHART_COLORS } from '@/lib/constants';
+import { useMemo } from 'react';
 
 export interface EventsChartProps {
   websiteId: string;
@@ -12,7 +12,7 @@ export interface EventsChartProps {
 
 export function EventsChart({ websiteId, className }: EventsChartProps) {
   const {
-    dateRange: { startDate, endDate, unit },
+    dateRange: { startDate, endDate, unit, value },
   } = useDateRange(websiteId);
   const { locale } = useLocale();
   const { data, isLoading } = useWebsiteEventsSeries(websiteId);
@@ -47,12 +47,15 @@ export function EventsChart({ websiteId, className }: EventsChartProps) {
 
   return (
     <BarChart
+      minDate={startDate.toISOString()}
+      maxDate={endDate.toISOString()}
       className={className}
       data={chartData}
       unit={unit}
       stacked={true}
       renderXLabel={renderDateLabels(unit, locale)}
       isLoading={isLoading}
+      isAllTime={value === 'all'}
     />
   );
 }
